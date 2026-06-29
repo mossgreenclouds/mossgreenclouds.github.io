@@ -186,6 +186,19 @@ const galleryLimits = {
   }
 };
 
+const heroCharacterRegions = {
+  desktop: [
+    { x: [12, 34], y: [13, 38] },
+    { x: [62, 88], y: [10, 36] },
+    { x: [38, 72], y: [8, 24] }
+  ],
+  mobile: [
+    { x: [14, 36], y: [10, 30] },
+    { x: [60, 86], y: [12, 34] },
+    { x: [38, 70], y: [8, 22] }
+  ]
+};
+
 const mixClassByTitle = {
   "my favorite shit": "is-my-favorite-shit",
   "夢境紀": "is-yumekyouki",
@@ -227,6 +240,27 @@ function randomBetween(min, max) {
 
 function galleryLimitSet() {
   return galleryLimits[window.innerWidth < mobileBreakpoint ? "mobile" : "desktop"];
+}
+
+function setupHeroCharacter() {
+  const character = document.querySelector(".hero-character-field");
+  if (!character) return;
+
+  const mode = window.innerWidth < mobileBreakpoint ? "mobile" : "desktop";
+  const regions = heroCharacterRegions[mode];
+  const region = regions[Math.floor(Math.random() * regions.length)];
+  const size = mode === "mobile" ? randomBetween(74, 138) : randomBetween(118, 230);
+
+  character.style.setProperty("--character-x", `${randomBetween(...region.x).toFixed(1)}%`);
+  character.style.setProperty("--character-y", `${randomBetween(...region.y).toFixed(1)}%`);
+  character.style.setProperty("--character-size", `${size.toFixed(0)}px`);
+  character.style.setProperty("--character-drift-x", `${randomBetween(8, 24).toFixed(0)}px`);
+  character.style.setProperty("--character-drift-y", `${randomBetween(4, 16).toFixed(0)}px`);
+  character.style.setProperty("--character-duration", `${randomBetween(18, 32).toFixed(1)}s`);
+
+  window.setTimeout(() => {
+    character.classList.add("is-visible");
+  }, randomBetween(6500, 16000));
 }
 
 function mixCardClass(mix) {
@@ -395,6 +429,7 @@ function buildGallery() {
 
 async function initSite() {
   await loadDreamText();
+  setupHeroCharacter();
   buildGallery();
   buildMixes();
 }
