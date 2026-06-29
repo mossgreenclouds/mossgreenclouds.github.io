@@ -84,11 +84,11 @@ video {
   left: var(--character-x, 72%);
   width: var(--character-size, 160px);
   pointer-events: none;
-  transform: translate(-50%, -50%);
+  transform: translate(calc(-50% - var(--character-drift-x, 14px)), calc(-50% - var(--character-drift-y, 8px)));
 }
 
 .hero-character-field.is-visible {
-  animation: character-drift var(--character-duration, 22s) ease-in-out 5s infinite alternate;
+  animation: character-drift var(--character-duration, 22s) ease-in-out infinite alternate;
 }
 
 .hero-character {
