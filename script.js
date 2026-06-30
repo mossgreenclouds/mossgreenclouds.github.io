@@ -5,21 +5,21 @@ const mixes = [
     cover: "assets/img/mu.jpg",
     genre: "Ambient",
     date: "2026.05.11",
-    tracklist: `01. Mark Isham / Love's Ash Dissolves
-02. Bob James / Far From Turtle
-03. Natural Calamity / Lotus Field
-04. The IT / Brazilian Love Dance
-05. Toshinori Kondo x DJ Krush / 夢宙 Mu-Chu
-06. Yoshio Ojima / Sealed
-07. Oneohtrix Point Never / Imago
-08. St.GIGA / 音の潮流 Tide of Sound
-09. Yas-Kaz / Jungle Book
-10. Yas-Kaz / 田園の愉楽
-11. William Aura / I Call Your Name
-12. Jan Jelinek / Vibraphonspulen
-13. Masayoshi Fujita & Jan Jelinek / Botuto
-14. Kara-Lis Coverdale / Moments In Love
-15. Lyu Hongjun / Forest Trail`
+    tracklist: `01 Mark Isham / Love's Ash Dissolves
+02 Bob James / Far From Turtle
+03 Natural Calamity / Lotus Field
+04 The IT / Brazilian Love Dance
+05 Toshinori Kondo x DJ Krush / 夢宙 Mu-Chu
+06 Yoshio Ojima / Sealed
+07 Oneohtrix Point Never / Imago
+08 St.GIGA / 音の潮流 Tide of Sound
+09 Yas-Kaz / Jungle Book
+10 Yas-Kaz / 田園の愉楽
+11 William Aura / I Call Your Name
+12 Jan Jelinek / Vibraphonspulen
+13 Masayoshi Fujita & Jan Jelinek / Botuto
+14 Kara-Lis Coverdale / Moments In Love
+15 Lyu Hongjun / Forest Trail`
   },
   {
     title: "dreamz",
