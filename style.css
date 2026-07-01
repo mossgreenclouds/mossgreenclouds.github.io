@@ -439,10 +439,44 @@ h1 {
   white-space: nowrap;
 }
 
-audio {
-  width: 100%;
-  height: 34px;
+.mix-player {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
   margin-bottom: 14px;
+}
+
+.mix-audio {
+  display: none;
+}
+
+.mix-play {
+  min-width: 54px;
+  padding: 7px 9px;
+  border: 1px solid rgba(241, 237, 223, .26);
+  border-radius: 0;
+  background: rgba(0, 0, 0, .36);
+  color: var(--ink);
+  font: 700 11px/1 var(--font-sans);
+  letter-spacing: .08em;
+  cursor: pointer;
+}
+
+.mix-player.is-playing .mix-play {
+  color: var(--acid);
+}
+
+.mix-seek {
+  width: 100%;
+  accent-color: var(--acid);
+}
+
+.mix-time {
+  color: rgba(241, 237, 223, .58);
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .tracklist {

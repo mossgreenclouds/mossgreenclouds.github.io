@@ -312,19 +312,85 @@ function buildMixes() {
             ${mix.date ? `<time class="release-date">${escapeHtml(mix.date)}</time>` : ""}
           </div>
         </div>
-        <audio controls preload="metadata" src="${escapeHtml(mix.audio)}"></audio>
+        <div class="mix-player">
+          <button class="mix-play" type="button" aria-label="${escapeHtml(mix.title)} を再生">PLAY</button>
+          <input class="mix-seek" type="range" min="0" max="1000" value="0" step="1" aria-label="${escapeHtml(mix.title)} の再生位置">
+          <span class="mix-time">00:00 / 00:00</span>
+          <audio class="mix-audio" preload="metadata" src="${escapeHtml(mix.audio)}" controlsList="nodownload noplaybackrate" disableRemotePlayback></audio>
+        </div>
         <pre class="tracklist">${escapeHtml(mix.tracklist)}</pre>
       </div>
     </article>
   `).join("");
 
-  const players = [...document.querySelectorAll("audio")];
+  setupMixPlayers();
+}
+
+function formatTime(value) {
+  if (!Number.isFinite(value)) return "00:00";
+
+  const totalSeconds = Math.max(0, Math.floor(value));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
+
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function setupMixPlayers() {
+  const players = [...document.querySelectorAll(".mix-player")];
+
   players.forEach((player) => {
-    player.addEventListener("play", () => {
-      players.forEach((other) => {
-        if (other !== player) other.pause();
-      });
+    const audio = player.querySelector(".mix-audio");
+    const playButton = player.querySelector(".mix-play");
+    const seek = player.querySelector(".mix-seek");
+    const time = player.querySelector(".mix-time");
+
+    const setPlaying = (isPlaying) => {
+      player.classList.toggle("is-playing", isPlaying);
+      playButton.textContent = isPlaying ? "PAUSE" : "PLAY";
+    };
+
+    const update = () => {
+      const duration = audio.duration;
+      seek.value = Number.isFinite(duration) && duration > 0
+        ? String(Math.round((audio.currentTime / duration) * 1000))
+        : "0";
+      time.textContent = `${formatTime(audio.currentTime)} / ${formatTime(duration)}`;
+    };
+
+    playButton.addEventListener("click", () => {
+      if (audio.paused) {
+        players.forEach((otherPlayer) => {
+          const otherAudio = otherPlayer.querySelector(".mix-audio");
+          if (otherAudio !== audio) otherAudio.pause();
+        });
+        audio.play().catch(() => {});
+      } else {
+        audio.pause();
+      }
     });
+
+    seek.addEventListener("input", () => {
+      if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
+      audio.currentTime = (Number(seek.value) / 1000) * audio.duration;
+    });
+
+    audio.addEventListener("loadedmetadata", update);
+    audio.addEventListener("durationchange", update);
+    audio.addEventListener("timeupdate", update);
+    audio.addEventListener("play", () => setPlaying(true));
+    audio.addEventListener("pause", () => setPlaying(false));
+    audio.addEventListener("ended", () => setPlaying(false));
+    audio.addEventListener("ratechange", () => {
+      if (audio.playbackRate !== 1) audio.playbackRate = 1;
+    });
+
+    update();
   });
 }
 
