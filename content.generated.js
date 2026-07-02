@@ -16,7 +16,6 @@ window.AK100_PHOTOS = [
   "photo/posts_17841879040035543.jpg",
   "photo/posts_17841894217035543.jpg",
   "photo/posts_17841991930035543.jpg",
-  "photo/posts_17842015711035543.jpg",
   "photo/posts_17842016065035543.jpg",
   "photo/posts_17842027537035543.jpg",
   "photo/posts_17842101472035543.jpg",
