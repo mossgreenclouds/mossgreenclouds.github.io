@@ -136,6 +136,11 @@ const photos = window.AK100_PHOTOS || [];
 let dreamText = window.AK100_DREAM_TEXT || "";
 const dreamTextPath = "assets/text/夢境紀.txt";
 const imageRoot = "assets/img/";
+const gallery = document.querySelector("#gallery");
+const focusReader = document.querySelector("#focusReader");
+const focusReaderText = document.querySelector("#focusReaderText");
+const focusClose = document.querySelector(".focus-close");
+const mobileBreakpoint = 720;
 
 async function loadDreamText() {
   try {
@@ -154,38 +159,6 @@ function splitDreamText() {
     .filter(Boolean);
 }
 
-const gallery = document.querySelector("#gallery");
-
-const photoShapes = [
-  "wide", "small", "tall", "square", "needle", "wide", "small", "slab",
-  "large", "square", "tall", "small", "panorama", "needle", "block", "wide"
-];
-
-const textShapes = [
-  "text-xs", "text-s", "text-xs", "text-m", "text-s", "text-xs",
-  "text-l", "text-xs", "text-m", "text-s", "text-xs", "text-xl"
-];
-
-const textSpans = [2, 3, 3, 4, 5];
-const photoMotions = ["still", "slide-x", "slide-y", "slide-x", "still", "slide-x"];
-
-const mobileBreakpoint = 720;
-
-const galleryLimits = {
-  desktop: {
-    photoLimit: 64,
-    mixIndexFloor: 42,
-    mixBackdropPhotoCount: 34,
-    tailPhotoLimit: 30
-  },
-  mobile: {
-    photoLimit: 34,
-    mixIndexFloor: 32,
-    mixBackdropPhotoCount: 16,
-    tailPhotoLimit: 18
-  }
-};
-
 const heroCharacterRegions = {
   desktop: [
     { x: [12, 34], y: [13, 38] },
@@ -198,6 +171,31 @@ const heroCharacterRegions = {
     { x: [38, 70], y: [8, 22] }
   ]
 };
+
+const galleryProfiles = {
+  desktop: {
+    photoLimit: 52,
+    mixIndex: .48,
+    backdropLimit: 18
+  },
+  mobile: {
+    photoLimit: 30,
+    mixIndex: .42,
+    backdropLimit: 10
+  }
+};
+
+const photoShapes = [
+  "photo-wide", "photo-square", "photo-tall", "photo-small", "photo-wide",
+  "photo-slab", "photo-square", "photo-portrait", "photo-small", "photo-wide"
+];
+
+const textShapes = [
+  "text-calm", "text-clear", "text-whisper", "text-large",
+  "text-clear", "text-calm", "text-whisper", "text-focus"
+];
+
+const photoMotions = ["drift-slow", "drift-x", "still", "drift-y", "drift-slow", "still"];
 
 const mixClassByTitle = {
   "my favorite shit": "is-my-favorite-shit",
@@ -238,15 +236,15 @@ function randomBetween(min, max) {
   return min + Math.random() * (max - min);
 }
 
-function galleryLimitSet() {
-  return galleryLimits[window.innerWidth < mobileBreakpoint ? "mobile" : "desktop"];
+function currentMode() {
+  return window.innerWidth < mobileBreakpoint ? "mobile" : "desktop";
 }
 
 function setupHeroCharacter() {
   const character = document.querySelector(".hero-character-field");
   if (!character) return;
 
-  const mode = window.innerWidth < mobileBreakpoint ? "mobile" : "desktop";
+  const mode = currentMode();
   const regions = heroCharacterRegions[mode];
   const region = regions[Math.floor(Math.random() * regions.length)];
   const size = mode === "mobile" ? randomBetween(74, 138) : randomBetween(118, 230);
@@ -394,28 +392,54 @@ function setupMixPlayers() {
   });
 }
 
+function openFocusReader(text) {
+  if (!focusReader || !focusReaderText) return;
+
+  focusReaderText.textContent = text;
+  focusReader.hidden = false;
+  window.requestAnimationFrame(() => focusReader.classList.add("is-open"));
+}
+
+function closeFocusReader() {
+  if (!focusReader) return;
+
+  focusReader.classList.remove("is-open");
+  window.setTimeout(() => {
+    if (!focusReader.classList.contains("is-open")) focusReader.hidden = true;
+  }, 220);
+}
+
+function setupFocusReader() {
+  if (!focusReader || !focusClose) return;
+
+  focusClose.addEventListener("click", closeFocusReader);
+  focusReader.addEventListener("click", (event) => {
+    if (event.target === focusReader) closeFocusReader();
+  });
+  window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !focusReader.hidden) closeFocusReader();
+  });
+}
+
 function buildGallery() {
   if (!gallery) return;
 
-  const limits = galleryLimitSet();
-  const photoLimit = Math.min(photos.length, limits.photoLimit);
+  const mode = currentMode();
+  const profile = galleryProfiles[mode];
   const photoPool = shuffle(photos);
-  const shuffledPhotos = photoPool.slice(0, photoLimit);
-  const shuffledFragments = shuffle(splitDreamText());
+  const selectedPhotos = photoPool.slice(0, Math.min(photos.length, profile.photoLimit));
+  const fragments = shuffle(splitDreamText());
 
   const createTextItem = (fragment, index) => {
-    const textSpan = textSpans[index % textSpans.length];
-    const safeStart = 2 + ((index * 3) % (14 - textSpan));
     const textStyle = [
-      `--text-start:${safeStart}`,
-      `--text-span:${textSpan}`,
-      `--text-delay:${randomBetween(-24, 0).toFixed(1)}s`,
-      `--text-duration:${randomBetween(18, 34).toFixed(1)}s`
+      `--text-delay:${randomBetween(-18, 0).toFixed(1)}s`,
+      `--text-duration:${randomBetween(22, 42).toFixed(1)}s`,
+      `--text-drift:${randomBetween(4, 18).toFixed(0)}px`
     ].join(";");
     return `
-      <p class="art-item dream-fragment ${textShapes[index % textShapes.length]}" style="${textStyle}">
+      <button class="art-item dream-fragment ${textShapes[index % textShapes.length]}" type="button" style="${textStyle}" data-fragment="${escapeHtml(fragment)}" aria-label="テキストを拡大表示">
         ${escapeHtml(fragment)}
-      </p>
+      </button>
     `;
   };
 
@@ -424,44 +448,38 @@ function buildGallery() {
     const label = name.replace(/\.[^.]+$/, "");
     const motion = photoMotions[index % photoMotions.length];
     const photoStyle = [
-      `--lift:${randomBetween(-28, 28).toFixed(0)}px`,
-      `--shift:${randomBetween(-24, 24).toFixed(0)}px`,
-      `--run:${randomBetween(10, 36).toFixed(0)}px`,
-      `--speed:${randomBetween(8, 22).toFixed(1)}s`,
-      `--delay:${randomBetween(-18, 0).toFixed(1)}s`,
-      `--burn:${randomBetween(.62, 1.24).toFixed(2)}`,
-      `--scale:${randomBetween(.94, 1.18).toFixed(2)}`,
-      `--alpha:${randomBetween(.68, .98).toFixed(2)}`,
-      `--bleed:${randomBetween(-26, 8).toFixed(0)}px`,
-      `--z:${Math.floor(randomBetween(1, 7))}`
+      `--lift:${randomBetween(-22, 22).toFixed(0)}px`,
+      `--shift:${randomBetween(-18, 18).toFixed(0)}px`,
+      `--run:${randomBetween(6, 22).toFixed(0)}px`,
+      `--slow-run:${randomBetween(3, 11).toFixed(0)}px`,
+      `--speed:${randomBetween(14, 34).toFixed(1)}s`,
+      `--delay:${randomBetween(-22, 0).toFixed(1)}s`,
+      `--burn:${randomBetween(.64, 1.08).toFixed(2)}`,
+      `--scale:${randomBetween(.96, 1.1).toFixed(2)}`,
+      `--alpha:${randomBetween(.52, .9).toFixed(2)}`,
+      `--z:${Math.floor(randomBetween(1, 5))}`
     ].join(";");
     return `
-      <div class="art-item photo-item ${className} ${photoShapes[index % photoShapes.length]} ${motion}" style="${photoStyle}" aria-label="${escapeHtml(label)}">
+      <figure class="art-item photo-item ${className} ${photoShapes[index % photoShapes.length]} ${motion}" style="${photoStyle}" aria-label="${escapeHtml(label)}">
         <img src="${escapeHtml(src)}" alt="${escapeHtml(label)}" loading="lazy" decoding="async">
-      </div>
+      </figure>
     `;
   };
 
-  const items = [
-    ...shuffledPhotos.map((name, index) => ({
-      type: "photo",
-      order: (index + .5) / Math.max(shuffledPhotos.length, 1),
-      html: createPhotoItem(name, index)
-    })),
-    ...shuffledFragments.map((fragment, index) => ({
-      type: "text",
-      order: (index + .35 + randomBetween(-.18, .18)) / Math.max(shuffledFragments.length, 1),
-      html: createTextItem(fragment, index)
-    }))
-  ].sort((left, right) => left.order - right.order);
+  const items = selectedPhotos.map((name, index) => ({
+    type: "photo",
+    order: (index + .45) / Math.max(selectedPhotos.length, 1),
+    html: createPhotoItem(name, index)
+  })).concat(fragments.map((fragment, index) => ({
+    type: "text",
+    order: (index + .55 + randomBetween(-.12, .12)) / Math.max(fragments.length, 1),
+    html: createTextItem(fragment, index)
+  }))).sort((left, right) => left.order - right.order);
 
-  const mixIndex = Math.min(
-    Math.max(limits.mixIndexFloor, Math.floor(items.length * .5)),
-    Math.max(0, items.length - 24)
-  );
+  const mixIndex = Math.min(Math.max(8, Math.floor(items.length * profile.mixIndex)), Math.max(0, items.length - 8));
   const mixBackdropPhotos = photoPool
-    .slice(photoLimit, photoLimit + limits.mixBackdropPhotoCount)
-    .map((name, index) => createPhotoItem(name, photoLimit + index, "mix-backdrop-item"))
+    .slice(selectedPhotos.length, selectedPhotos.length + profile.backdropLimit)
+    .map((name, index) => createPhotoItem(name, selectedPhotos.length + index, "mix-backdrop-item"))
     .join("");
   const mixSection = `
     <section class="art-item mix-section">
@@ -473,28 +491,15 @@ function buildGallery() {
   `;
   items.splice(mixIndex, 0, { type: "mix", html: mixSection });
 
-  const beforeAndMix = items.slice(0, mixIndex + 1);
-  const tail = items.slice(mixIndex + 1);
-  const visibleTail = [];
-  let tailPhotoCount = 0;
-
-  tail.forEach((item) => {
-    if (item.type === "text") {
-      visibleTail.push(item);
-      return;
-    }
-
-    if (tailPhotoCount < limits.tailPhotoLimit) {
-      visibleTail.push(item);
-      tailPhotoCount += 1;
-    }
+  gallery.innerHTML = items.map((item) => item.html).join("");
+  gallery.querySelectorAll(".dream-fragment").forEach((fragment) => {
+    fragment.addEventListener("click", () => openFocusReader(fragment.dataset.fragment || fragment.textContent.trim()));
   });
-
-  gallery.innerHTML = [...beforeAndMix, ...visibleTail].map((item) => item.html).join("");
 }
 
 async function initSite() {
   await loadDreamText();
+  setupFocusReader();
   setupHeroCharacter();
   buildGallery();
   buildMixes();
