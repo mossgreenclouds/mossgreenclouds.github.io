@@ -179,7 +179,7 @@ const galleryProfiles = {
     backdropLimit: 20
   },
   mobile: {
-    photoLimit: 26,
+    photoLimit: 34,
     mixIndex: .3,
     backdropLimit: 12
   }
@@ -191,10 +191,11 @@ const photoShapes = [
   "photo-square", "photo-slab"
 ];
 
-const textShapes = [
-  "text-calm", "text-clear", "text-whisper", "text-large",
-  "text-clear", "text-calm", "text-whisper", "text-focus"
-];
+const textShapeGroups = {
+  short: ["text-large", "text-focus", "text-clear"],
+  medium: ["text-clear", "text-calm", "text-whisper"],
+  long: ["text-calm", "text-clear"]
+};
 
 const photoMotions = ["drift-slow", "drift-x", "still", "drift-y", "drift-slow", "still"];
 
@@ -245,6 +246,28 @@ function styleVars(vars) {
 
 function pickCycled(items, index) {
   return items[index % items.length];
+}
+
+function distributeByLength(items) {
+  const sorted = [...items].sort((left, right) => right.length - left.length);
+  const buckets = Array.from({ length: 3 }, () => []);
+
+  sorted.forEach((item, index) => {
+    buckets[index % buckets.length].push(item);
+  });
+
+  return shuffle(buckets).flatMap((bucket) => shuffle(bucket));
+}
+
+function textLengthGroup(text) {
+  if (text.length <= 36) return "short";
+  if (text.length >= 130) return "long";
+  return "medium";
+}
+
+function textShapeFor(fragment, index) {
+  const lengthGroup = textLengthGroup(fragment);
+  return pickCycled(textShapeGroups[lengthGroup], index);
 }
 
 function currentMode() {
@@ -439,19 +462,20 @@ function buildGallery() {
   const profile = galleryProfiles[mode];
   const photoPool = shuffle(photos);
   const selectedPhotos = photoPool.slice(0, Math.min(photos.length, profile.photoLimit));
-  const fragments = shuffle(splitDreamText());
+  const fragments = distributeByLength(splitDreamText());
   const mixBackdropPool = photoPool.slice(selectedPhotos.length);
 
   const createTextItem = (fragment, index) => {
+    const lengthGroup = textLengthGroup(fragment);
     const textStyle = styleVars({
       "text-delay": `${randomBetween(-18, 0).toFixed(1)}s`,
       "text-duration": `${randomBetween(24, 44).toFixed(1)}s`,
       "text-drift": `${randomBetween(4, 14).toFixed(0)}px`
     });
-    const shape = pickCycled(textShapes, index);
+    const shape = textShapeFor(fragment, index);
 
     return `
-      <button class="art-item dream-fragment ${shape}" type="button" style="${textStyle}" data-fragment="${escapeHtml(fragment)}" aria-label="テキストを拡大表示">
+      <button class="art-item dream-fragment ${shape} is-${lengthGroup}-text" type="button" style="${textStyle}" data-fragment="${escapeHtml(fragment)}" aria-label="テキストを拡大表示">
         ${escapeHtml(fragment)}
       </button>
     `;

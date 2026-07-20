@@ -371,6 +371,14 @@ h1 {
 .text-large { grid-column: span 5; font-size: clamp(18px, 2.05vw, 34px); line-height: 1.12; }
 .text-focus { grid-column: span 6; font-size: clamp(20px, 2.7vw, 46px); line-height: 1.05; color: rgba(241, 237, 223, .96); }
 
+.is-long-text {
+  line-height: 1.36;
+}
+
+.is-short-text {
+  min-height: clamp(70px, 7vw, 120px);
+}
+
 .mix-section {
   position: relative;
   z-index: 9;
@@ -794,7 +802,17 @@ footer a {
   .text-focus {
     grid-column: span 6;
     min-height: auto;
-    font-size: clamp(14px, 4.1vw, 19px);
+  }
+
+  .text-whisper { font-size: clamp(13px, 3.7vw, 16px); }
+  .text-calm { font-size: clamp(14px, 4vw, 18px); }
+  .text-clear { font-size: clamp(15px, 4.4vw, 20px); }
+  .text-large { font-size: clamp(17px, 5vw, 23px); line-height: 1.16; }
+  .text-focus { font-size: clamp(19px, 5.8vw, 28px); line-height: 1.1; }
+
+  .is-long-text {
+    font-size: clamp(14px, 4vw, 18px);
+    line-height: 1.38;
   }
 
   .mix-section {
