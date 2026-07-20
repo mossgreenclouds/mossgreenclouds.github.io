@@ -174,20 +174,23 @@ const heroCharacterRegions = {
 
 const galleryProfiles = {
   desktop: {
-    photoLimit: 52,
-    mixIndex: .48,
-    backdropLimit: 18
+    photoLimit: 48,
+    mixIndex: .34,
+    backdropLimit: 20,
+    textAfterPhotos: 3
   },
   mobile: {
-    photoLimit: 30,
-    mixIndex: .42,
-    backdropLimit: 10
+    photoLimit: 26,
+    mixIndex: .3,
+    backdropLimit: 12,
+    textAfterPhotos: 2
   }
 };
 
 const photoShapes = [
   "photo-wide", "photo-square", "photo-tall", "photo-small", "photo-wide",
-  "photo-slab", "photo-square", "photo-portrait", "photo-small", "photo-wide"
+  "photo-slab", "photo-square", "photo-portrait", "photo-small", "photo-wide",
+  "photo-square", "photo-slab"
 ];
 
 const textShapes = [
@@ -234,6 +237,16 @@ function shuffle(items) {
 
 function randomBetween(min, max) {
   return min + Math.random() * (max - min);
+}
+
+function styleVars(vars) {
+  return Object.entries(vars)
+    .map(([name, value]) => `--${name}:${value}`)
+    .join(";");
+}
+
+function pickCycled(items, index) {
+  return items[index % items.length];
 }
 
 function currentMode() {
@@ -429,15 +442,18 @@ function buildGallery() {
   const photoPool = shuffle(photos);
   const selectedPhotos = photoPool.slice(0, Math.min(photos.length, profile.photoLimit));
   const fragments = shuffle(splitDreamText());
+  const mixBackdropPool = photoPool.slice(selectedPhotos.length);
 
   const createTextItem = (fragment, index) => {
-    const textStyle = [
-      `--text-delay:${randomBetween(-18, 0).toFixed(1)}s`,
-      `--text-duration:${randomBetween(22, 42).toFixed(1)}s`,
-      `--text-drift:${randomBetween(4, 18).toFixed(0)}px`
-    ].join(";");
+    const textStyle = styleVars({
+      "text-delay": `${randomBetween(-18, 0).toFixed(1)}s`,
+      "text-duration": `${randomBetween(24, 44).toFixed(1)}s`,
+      "text-drift": `${randomBetween(4, 14).toFixed(0)}px`
+    });
+    const shape = pickCycled(textShapes, index);
+
     return `
-      <button class="art-item dream-fragment ${textShapes[index % textShapes.length]}" type="button" style="${textStyle}" data-fragment="${escapeHtml(fragment)}" aria-label="テキストを拡大表示">
+      <button class="art-item dream-fragment ${shape}" type="button" style="${textStyle}" data-fragment="${escapeHtml(fragment)}" aria-label="テキストを拡大表示">
         ${escapeHtml(fragment)}
       </button>
     `;
@@ -446,39 +462,50 @@ function buildGallery() {
   const createPhotoItem = (name, index, className = "") => {
     const src = `${imageRoot}${name}`;
     const label = name.replace(/\.[^.]+$/, "");
-    const motion = photoMotions[index % photoMotions.length];
-    const photoStyle = [
-      `--lift:${randomBetween(-22, 22).toFixed(0)}px`,
-      `--shift:${randomBetween(-18, 18).toFixed(0)}px`,
-      `--run:${randomBetween(6, 22).toFixed(0)}px`,
-      `--slow-run:${randomBetween(3, 11).toFixed(0)}px`,
-      `--speed:${randomBetween(14, 34).toFixed(1)}s`,
-      `--delay:${randomBetween(-22, 0).toFixed(1)}s`,
-      `--burn:${randomBetween(.64, 1.08).toFixed(2)}`,
-      `--scale:${randomBetween(.96, 1.1).toFixed(2)}`,
-      `--alpha:${randomBetween(.52, .9).toFixed(2)}`,
-      `--z:${Math.floor(randomBetween(1, 5))}`
-    ].join(";");
+    const motion = pickCycled(photoMotions, index);
+    const shape = pickCycled(photoShapes, index);
+    const photoStyle = styleVars({
+      lift: `${randomBetween(-16, 18).toFixed(0)}px`,
+      shift: `${randomBetween(-14, 14).toFixed(0)}px`,
+      run: `${randomBetween(5, 16).toFixed(0)}px`,
+      "slow-run": `${randomBetween(3, 9).toFixed(0)}px`,
+      speed: `${randomBetween(18, 38).toFixed(1)}s`,
+      delay: `${randomBetween(-22, 0).toFixed(1)}s`,
+      burn: randomBetween(.78, 1.1).toFixed(2),
+      scale: randomBetween(.98, 1.07).toFixed(2),
+      alpha: randomBetween(.62, .92).toFixed(2),
+      z: Math.floor(randomBetween(1, 5))
+    });
+
     return `
-      <figure class="art-item photo-item ${className} ${photoShapes[index % photoShapes.length]} ${motion}" style="${photoStyle}" aria-label="${escapeHtml(label)}">
+      <figure class="art-item photo-item ${className} ${shape} ${motion}" style="${photoStyle}" aria-label="${escapeHtml(label)}">
         <img src="${escapeHtml(src)}" alt="${escapeHtml(label)}" loading="lazy" decoding="async">
       </figure>
     `;
   };
 
-  const items = selectedPhotos.map((name, index) => ({
-    type: "photo",
-    order: (index + .45) / Math.max(selectedPhotos.length, 1),
-    html: createPhotoItem(name, index)
-  })).concat(fragments.map((fragment, index) => ({
-    type: "text",
-    order: (index + .55 + randomBetween(-.12, .12)) / Math.max(fragments.length, 1),
-    html: createTextItem(fragment, index)
-  }))).sort((left, right) => left.order - right.order);
+  const photoItems = selectedPhotos.map((name, index) => createPhotoItem(name, index));
+  const textItems = fragments.map((fragment, index) => createTextItem(fragment, index));
+  const items = [];
+  let photoIndex = 0;
+
+  textItems.forEach((textItem, textIndex) => {
+    const photoBatchSize = profile.textAfterPhotos + (textIndex % 3 === 1 ? 1 : 0);
+    for (let count = 0; count < photoBatchSize && photoIndex < photoItems.length; count += 1) {
+      items.push({ type: "photo", html: photoItems[photoIndex] });
+      photoIndex += 1;
+    }
+    items.push({ type: "text", html: textItem });
+  });
+
+  while (photoIndex < photoItems.length) {
+    items.push({ type: "photo", html: photoItems[photoIndex] });
+    photoIndex += 1;
+  }
 
   const mixIndex = Math.min(Math.max(8, Math.floor(items.length * profile.mixIndex)), Math.max(0, items.length - 8));
-  const mixBackdropPhotos = photoPool
-    .slice(selectedPhotos.length, selectedPhotos.length + profile.backdropLimit)
+  const mixBackdropPhotos = mixBackdropPool
+    .slice(0, profile.backdropLimit)
     .map((name, index) => createPhotoItem(name, selectedPhotos.length + index, "mix-backdrop-item"))
     .join("");
   const mixSection = `
