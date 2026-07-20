@@ -1,2 +1,7 @@
 .DS_Store
-sync-content.js
+Thumbs.db
+ehthumbs.db
+.Spotlight-V100
+.Trashes
+*.swp
+*.tmp
