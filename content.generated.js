@@ -311,5 +311,6 @@ window.AK100_PHOTOS = [
   "photo/senzoku.jpg",
   "photo/sora.jpg",
   "photo/stories_202505_18019353809704888.webp",
-  "photo/todoroki.jpg"
+  "photo/todoroki.jpg",
+  "photo/toilet.png"
 ];
