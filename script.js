@@ -176,14 +176,12 @@ const galleryProfiles = {
   desktop: {
     photoLimit: 48,
     mixIndex: .34,
-    backdropLimit: 20,
-    textAfterPhotos: 3
+    backdropLimit: 20
   },
   mobile: {
     photoLimit: 26,
     mixIndex: .3,
-    backdropLimit: 12,
-    textAfterPhotos: 2
+    backdropLimit: 12
   }
 };
 
@@ -490,8 +488,8 @@ function buildGallery() {
   let photoIndex = 0;
 
   textItems.forEach((textItem, textIndex) => {
-    const photoBatchSize = profile.textAfterPhotos + (textIndex % 3 === 1 ? 1 : 0);
-    for (let count = 0; count < photoBatchSize && photoIndex < photoItems.length; count += 1) {
+    const targetPhotoCount = Math.round(((textIndex + 1) / textItems.length) * photoItems.length);
+    while (photoIndex < targetPhotoCount && photoIndex < photoItems.length) {
       items.push({ type: "photo", html: photoItems[photoIndex] });
       photoIndex += 1;
     }
