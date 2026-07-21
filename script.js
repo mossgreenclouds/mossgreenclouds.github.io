@@ -197,6 +197,19 @@ const textShapeGroups = {
   long: ["text-calm", "text-clear"]
 };
 
+const textMotionProfiles = {
+  default: {
+    drift: [5, 14],
+    minAlpha: .76,
+    maxAlpha: .97
+  },
+  long: {
+    drift: [3, 9],
+    minAlpha: .82,
+    maxAlpha: .98
+  }
+};
+
 const photoMotions = ["drift-slow", "drift-x", "still", "drift-y", "drift-slow", "still"];
 
 const mixClassByTitle = {
@@ -268,6 +281,18 @@ function textLengthGroup(text) {
 function textShapeFor(fragment, index) {
   const lengthGroup = textLengthGroup(fragment);
   return pickCycled(textShapeGroups[lengthGroup], index);
+}
+
+function textMotionFor(lengthGroup) {
+  const profile = textMotionProfiles[lengthGroup] || textMotionProfiles.default;
+
+  return {
+    "text-delay": `${randomBetween(-18, 0).toFixed(1)}s`,
+    "text-duration": `${randomBetween(26, 46).toFixed(1)}s`,
+    "text-drift": `${randomBetween(...profile.drift).toFixed(0)}px`,
+    "text-min-alpha": profile.minAlpha,
+    "text-max-alpha": profile.maxAlpha
+  };
 }
 
 function currentMode() {
@@ -467,11 +492,7 @@ function buildGallery() {
 
   const createTextItem = (fragment, index) => {
     const lengthGroup = textLengthGroup(fragment);
-    const textStyle = styleVars({
-      "text-delay": `${randomBetween(-18, 0).toFixed(1)}s`,
-      "text-duration": `${randomBetween(24, 44).toFixed(1)}s`,
-      "text-drift": `${randomBetween(4, 14).toFixed(0)}px`
-    });
+    const textStyle = styleVars(textMotionFor(lengthGroup));
     const shape = textShapeFor(fragment, index);
 
     return `
