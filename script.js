@@ -191,6 +191,19 @@ const photoShapes = [
   "photo-square", "photo-slab"
 ];
 
+const photoMotionProfile = {
+  lift: [-16, 18],
+  shift: [-14, 14],
+  run: [5, 16],
+  slowRun: [3, 9],
+  speed: [18, 38],
+  delay: [-22, 0],
+  burn: [.78, 1.1],
+  scale: [.98, 1.07],
+  alpha: [.62, .92],
+  z: [1, 5]
+};
+
 const textShapeGroups = {
   short: ["text-large", "text-focus", "text-clear"],
   medium: ["text-clear", "text-calm", "text-whisper"],
@@ -251,6 +264,10 @@ function randomBetween(min, max) {
   return min + Math.random() * (max - min);
 }
 
+function randomCssValue(range, digits = 0, unit = "") {
+  return `${randomBetween(...range).toFixed(digits)}${unit}`;
+}
+
 function styleVars(vars) {
   return Object.entries(vars)
     .map(([name, value]) => `--${name}:${value}`)
@@ -287,12 +304,29 @@ function textMotionFor(lengthGroup) {
   const profile = textMotionProfiles[lengthGroup] || textMotionProfiles.default;
 
   return {
-    "text-delay": `${randomBetween(-18, 0).toFixed(1)}s`,
-    "text-duration": `${randomBetween(26, 46).toFixed(1)}s`,
-    "text-drift": `${randomBetween(...profile.drift).toFixed(0)}px`,
+    "text-delay": randomCssValue([-18, 0], 1, "s"),
+    "text-duration": randomCssValue([26, 46], 1, "s"),
+    "text-drift": randomCssValue(profile.drift, 0, "px"),
     "text-min-alpha": profile.minAlpha,
     "text-max-alpha": profile.maxAlpha
   };
+}
+
+function photoStyleFor() {
+  const profile = photoMotionProfile;
+
+  return styleVars({
+    lift: randomCssValue(profile.lift, 0, "px"),
+    shift: randomCssValue(profile.shift, 0, "px"),
+    run: randomCssValue(profile.run, 0, "px"),
+    "slow-run": randomCssValue(profile.slowRun, 0, "px"),
+    speed: randomCssValue(profile.speed, 1, "s"),
+    delay: randomCssValue(profile.delay, 1, "s"),
+    burn: randomCssValue(profile.burn, 2),
+    scale: randomCssValue(profile.scale, 2),
+    alpha: randomCssValue(profile.alpha, 2),
+    z: Math.floor(randomBetween(...profile.z))
+  });
 }
 
 function currentMode() {
@@ -507,18 +541,7 @@ function buildGallery() {
     const label = name.replace(/\.[^.]+$/, "");
     const motion = pickCycled(photoMotions, index);
     const shape = pickCycled(photoShapes, index);
-    const photoStyle = styleVars({
-      lift: `${randomBetween(-16, 18).toFixed(0)}px`,
-      shift: `${randomBetween(-14, 14).toFixed(0)}px`,
-      run: `${randomBetween(5, 16).toFixed(0)}px`,
-      "slow-run": `${randomBetween(3, 9).toFixed(0)}px`,
-      speed: `${randomBetween(18, 38).toFixed(1)}s`,
-      delay: `${randomBetween(-22, 0).toFixed(1)}s`,
-      burn: randomBetween(.78, 1.1).toFixed(2),
-      scale: randomBetween(.98, 1.07).toFixed(2),
-      alpha: randomBetween(.62, .92).toFixed(2),
-      z: Math.floor(randomBetween(1, 5))
-    });
+    const photoStyle = photoStyleFor();
 
     return `
       <figure class="art-item photo-item ${className} ${shape} ${motion}" style="${photoStyle}" aria-label="${escapeHtml(label)}">
